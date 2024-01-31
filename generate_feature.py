@@ -11,7 +11,7 @@ def generate_feature(path):
             my_feature_list.append(line)
     question = []
     for i in my_feature_list:
-        openai.api_key = "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"
+        openai.api_key = ""
         messages = []
         system_message = "You are a medical health assistant robot"
         messages.append({"role": "system", "content": system_message})
