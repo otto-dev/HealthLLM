@@ -129,7 +129,7 @@ def load_doc(folder_path,question,work):
     count,dict = count_subfolders(folder_path)
     list_k = []
     context = 'Here is some additional professional health knowledge that can help you better analyze the report'
-    for i in range(400,500):
+    for i in range(0,10000):
         documents = SimpleDirectoryReader(dict[i]).load_data()
         index = GPTVectorStoreIndex.from_documents(documents)
         index.set_index_id("index_health")
