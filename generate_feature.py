@@ -32,7 +32,7 @@ def generate_feature(path):
 
 if __name__ == '__main__':
 
-    OPENAI_API_KEY = "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"
+    OPENAI_API_KEY = "sk-......."
 
     path = '/Users/jmy/Desktop/ai_for_health_final/label and feature/output_target.txt'
     question = generate_feature(path)
