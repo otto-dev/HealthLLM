@@ -1,6 +1,5 @@
 import re
 
-
 words = []
 
 with open('feature.txt', 'r', encoding='utf-8') as file:
@@ -12,21 +11,19 @@ with open('feature.txt', 'r', encoding='utf-8') as file:
         else:
             words.extend(line.split('、'))
 
-print(words)
 processed_lst = []
 
 for item in words:
     if item.startswith('.'):
-        processed_lst.append(item[1:])
+        text_without_spaces = item[1:].replace(' ', '')
+        processed_lst.append(text_without_spaces)
     else:
         # print(item)
         symptoms_list = [symptom.strip() for symptom in item.split(',')]
         for i in symptoms_list:
             processed_lst.append(i)
-
 print(processed_lst)
 
-text = "Fatigue, weakness, pale skin, shortness of breath, dizziness, headache, cold hands and feet, chest pain, irregular heartbeat, difficulty concentrating, brittle nails, restless legs syndrome"
-
-symptoms_list = [symptom.strip() for symptom in text.split(',')]
-print(symptoms_list)
+with open("/Users/chongzhang/PycharmProjects/ai_for_health_final/training/feature_update.txt", "w") as file:
+    for item in processed_lst:
+        file.write("%s\n" % item)

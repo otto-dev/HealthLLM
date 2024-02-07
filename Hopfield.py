@@ -8,6 +8,7 @@ import torch
 from sentence_transformers import SentenceTransformer
 import pickle
 
+
 class HopfieldRetrievalModel(nn.Module):
     def __init__(self, beta=0.125, update_steps_max=3):
         # def __init__(self, beta=0.125):
@@ -44,7 +45,6 @@ class HopfieldRetrievalModel(nn.Module):
         return pair_list
 
 
-
 def read_external_knowledge(path):
     path = '/Users/jmy/Desktop/ai_for_health_final/exsit_knowledge/my_dict.pkl'
     with open(path, 'rb') as file:
@@ -69,10 +69,10 @@ def read_reports(path):
     return reports
 
 
-
 def retrieval_info(reports, path, k):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     paragraphs = read_external_knowledge(path + '/exsit_knowledge')
+    print(len(paragraphs))
 
     # sentence_embedding with paragraphs
     model = SentenceTransformer('all-mpnet-base-v2')
@@ -82,6 +82,8 @@ def retrieval_info(reports, path, k):
     p_embeddings = model.encode(paragraphs)
     # sentence_embedding with reports
     report_embeddings = model.encode(reports)
+    print('report', report_embeddings.shape)
+    print('p_embedding', p_embeddings.shape)
     retrievaler = HopfieldRetrievalModel().to(device)
     result = retrievaler(torch.tensor(p_embeddings).to(device) * 100, torch.tensor(report_embeddings).to(device) * 100)
     input_ids = torch.topk(result, k, dim=1).indices
@@ -100,11 +102,9 @@ def retrieval_info(reports, path, k):
     return knowledge
 
 
-
-
 if __name__ == '__main__':
-    reports = read_reports('/Users/jmy/Desktop/ai_for_health_final/dataset_folder/health_report_{2343}')  # 13452
-    know = retrieval_info(reports,'/Users/jmy/Desktop/ai_for_health_final/',3)
+    reports = read_reports(
+        '/Users/chongzhang/PycharmProjects/ai_for_health_final/dataset_folder/health_report_{243}')  # 13452
+    know = retrieval_info(reports, '/Users/chongzhang/PycharmProjects/ai_for_health_final/', 3)
     for i in know:
         print(i)
-
