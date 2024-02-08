@@ -97,7 +97,7 @@ def count_subfolders(folder_path):
 def load_doc(folder_path, question):
     count, dict = count_subfolders(folder_path)
     list_k = []
-    openai.api_key = "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"
+    openai.api_key = "Your Api"
     context = 'Here is some additional professional health knowledge that can help you better analyze the report'
     for i in range(0, 1):
         documents = SimpleDirectoryReader(dict[i]).load_data()
