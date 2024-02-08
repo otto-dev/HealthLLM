@@ -10,16 +10,18 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
 )
+from Hopfield import retrieval_info
 
 
-def answer_from_gpt(ques, context):
+def answer_from_gpt(ques, context, work):
+
     storage_context = StorageContext.from_defaults(persist_dir='./storage')
     index = load_index_from_storage(storage_context, index_id="index_health")
     list_score = []
 
     t = 0
     for i in ques:
-        my_context = context
+        my_context = context + work[t]
         QA_PROMPT = get_systemprompt_template(my_context)
         query_engine = index.as_query_engine(text_qa_template=QA_PROMPT)
         response = query_engine.query(i)
@@ -32,21 +34,23 @@ def answer_from_gpt(ques, context):
     return list_score
 
 
+
 def get_systemprompt_template(exist_context):
+
     chat_text_qa_msgs = [
         SystemMessagePromptTemplate.from_template(
             exist_context
         ),
         HumanMessagePromptTemplate.from_template(
-            "Give the answer in jason format with only one number between 0 and 1 that is: 'score'\n"
-            "The score number must be an decimals\n"
-            "This is the rule of answer: 0-0.2 is mild or none, 0.3-0.6 is moderate, and above 0.7 is severe.\n"
-            "This is a patient‘s medical record. Context information in below\n"
-            "---------------------\n"
-            "{context_str}"
-            "Given the context information, you are a helpful health consultant "
-            "answer the question: {query_str}\n"
-        )
+        "Give the answer in jason format with only one number between 0 and 1 that is: 'score'\n"
+        "The score number must be an decimals\n"
+        "This is the rule of answer: 0-0.2 is mild or none, 0.3-0.6 is moderate, and above 0.7 is severe.\n"
+        "This is a patient‘s medical record. Context information in below\n"
+        "---------------------\n"
+        "{context_str}"
+        "Given the context information, you are a helpful health consultant "
+        "answer the question: {query_str}\n"
+    )
     ]
     chat_text_qa_msgs_lc = ChatPromptTemplate.from_messages(chat_text_qa_msgs)
     text_qa_template = Prompt.from_langchain_prompt(chat_text_qa_msgs_lc)
@@ -73,9 +77,13 @@ def generate_question(path):
     question = []
     for i in my_feature_list:
         sentence = f"Does the person described in the case have {i} symptoms? Do you think it is serious?"
+        list_sentence = [sentence]
+        retrieval = retrieval_info(list_sentence, '/Users/jmy/Desktop/ai_for_health_final/', 1)
         question.append(sentence)
+        related_work.append(retrieval[0])
+        print(retrieval[0])
 
-    return question, my_feature_list
+    return question, related_work, my_feature_list
 
 
 def count_subfolders(folder_path):
@@ -86,39 +94,47 @@ def count_subfolders(folder_path):
         if root != folder_path:
             subfolder_count += 1
 
-    basepath = '/Users/chongzhang/PycharmProjects/ai_for_health_final/dataset_folder/health_report_'
+    basepath = '/Users/jmy/Desktop/ai_for_health_final/dataset_folder/health_report_'
     for i in range(subfolder_count):
-        path_rr = basepath + str({i})
+        path_rr = basepath+str({i})
         subfolder_paths.append(path_rr)
 
     return subfolder_count, subfolder_paths
 
 
-def load_doc(folder_path, question):
+
+
+def load_doc(folder_path,question,work):
+    print(len(work))
     count, dict = count_subfolders(folder_path)
     list_k = []
-    openai.api_key = "Your Api"
     context = 'Here is some additional professional health knowledge that can help you better analyze the report'
-    for i in range(0, 1):
+    for i in range(0,5000):
         documents = SimpleDirectoryReader(dict[i]).load_data()
         index = GPTVectorStoreIndex.from_documents(documents)
         index.set_index_id("index_health")
         index.storage_context.persist('./storage')
         content = context
-        list = answer_from_gpt(question, content)
+        list = answer_from_gpt(question, content, work)
         list_k.append(list)
     return list_k
 
 
+
 if __name__ == '__main__':
 
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
-    path = '/Users/chongzhang/PycharmProjects/ai_for_health_final/label and feature/input_feature.txt'
-    question, features_list = generate_question(path)
-    folder_path = '/Users/chongzhang/PycharmProjects/ai_for_health_final/dataset_folder'
-    list = load_doc(folder_path, question)
 
-    with open(f'training2/combined10.csv', 'w', newline='') as file:
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    path = '/Users/jmy/Desktop/ai_for_health_final/label and feature/input_feature.txt'
+    question, related_work, features_list = generate_question(path)
+    folder_path = '/Users/jmy/Desktop/ai_for_health_final/dataset_folder'
+    list = load_doc(folder_path, question, related_work)
+
+    with open('training/train.txt', 'w') as file:
+         for item in list:
+             file.write(''.join(str(item)) + '\n\n')
+
+    with open('training/combined7.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         # 首先写入特征行
         writer.writerow(features_list)
